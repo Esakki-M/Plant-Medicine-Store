@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Esakki's Plant Medicine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.min.js"></script>
+    
+    <!-- Payment Gateway SDKs -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=test&currency=INR"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #1cca64;
+            --primary-dark: #0f803d;
+            --secondary: #8f94fb;
+            --dark: #111714;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--dark);
+            background-color: var(--light);
+        }
+        
+        .navbar-brand {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--primary-dark);
+        }
+        
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary-custom {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-custom:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        
+        .payment-option {
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .payment-option:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(28, 202, 100, 0.1);
+        }
+        
+        .payment-option.selected {
+            border-color: var(--primary);
+            background-color: rgba(28, 202, 100, 0.05);
+        }
+        
+        .payment-option.selected::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background-color: var(--primary);
+        }
+        
+        .payment-logo {
+            height: 40px;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+        
+        .payment-option:hover .payment-logo {
+            transform: scale(1.05);
+        }
+        
+        .payment-option .form-check-input:checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .order-summary {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 50px 0;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+            <div class="container">
+                <a class="navbar-brand" href="index.html">Esakki's Plant Medicine</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html#products">Products</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">About</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Contact</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Checkout Section -->
+        <div class="container py-5">
+            <div class="row">
+                <div class="col-lg-8">
+                    <h2 class="mb-4">Checkout</h2>
+                    
+                    <!-- Shipping Information -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Shipping Information</h5>
+                            <form>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="firstName" class="form-label">First Name</label>
+                                        <input type="text" class="form-control" id="firstName" v-model="shippingInfo.firstName" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="lastName" class="form-label">Last Name</label>
+                                        <input type="text" class="form-control" id="lastName" v-model="shippingInfo.lastName" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" v-model="shippingInfo.email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Phone</label>
+                                    <input type="tel" class="form-control" id="phone" v-model="shippingInfo.phone" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Address</label>
+                                    <input type="text" class="form-control" id="address" v-model="shippingInfo.address" required>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="city" class="form-label">City</label>
+                                        <input type="text" class="form-control" id="city" v-model="shippingInfo.city" required>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="state" class="form-label">State</label>
+                                        <input type="text" class="form-control" id="state" v-model="shippingInfo.state" required>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="pincode" class="form-label">Pincode</label>
+                                        <input type="text" class="form-control" id="pincode" v-model="shippingInfo.pincode" required>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Method -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Payment Method</h5>
+                            <p class="text-muted mb-4">Choose your preferred payment option below</p>
+                            
+                            <!-- Payment Options -->
+                            <div class="payment-option" 
+                                 :class="{selected: selectedPayment === 'razorpay'}" 
+                                 @click="selectPayment('razorpay')">
+                                <div class="d-flex align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay"
+                                               :checked="selectedPayment === 'razorpay'">
+                                    </div>
+                                    <div class="ms-3">
+                                        <img src="https://razorpay.com/assets/razorpay-glyph.svg" alt="Razorpay" class="payment-logo">
+                                    </div>
+                                    <div class="ms-3">
+                                        <label class="form-check-label" for="razorpay">Razorpay</label>
+                                        <p class="text-muted mb-0 small">Pay securely with credit/debit card, UPI, or net banking</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="payment-option" 
+                                 :class="{selected: selectedPayment === 'paypal'}" 
+                                 @click="selectPayment('paypal')">
+                                <div class="d-flex align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="paypal"
+                                               :checked="selectedPayment === 'paypal'">
+                                    </div>
+                                    <div class="ms-3">
+                                        <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" alt="PayPal" class="payment-logo">
+                                    </div>
+                                    <div class="ms-3">
+                                        <label class="form-check-label" for="paypal">PayPal</label>
+                                        <p class="text-muted mb-0 small">Pay securely with your PayPal account</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="payment-option" 
+                                 :class="{selected: selectedPayment === 'stripe'}" 
+                                 @click="selectPayment('stripe')">
+                                <div class="d-flex align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="stripe"
+                                               :checked="selectedPayment === 'stripe'">
+                                    </div>
+                                    <div class="ms-3">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" class="payment-logo">
+                                    </div>
+                                    <div class="ms-3">
+                                        <label class="form-check-label" for="stripe">Credit/Debit Card</label>
+                                        <p class="text-muted mb-0 small">Pay securely with Visa, Mastercard, or other cards</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="payment-option" 
+                                 :class="{selected: selectedPayment === 'cod'}" 
+                                 @click="selectPayment('cod')">
+                                <div class="d-flex align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="cod"
+                                               :checked="selectedPayment === 'cod'">
+                                    </div>
+                                    <div class="ms-3">
+                                        <i class="fas fa-money-bill-wave fa-2x text-success"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <label class="form-check-label" for="cod">Cash on Delivery</label>
+                                        <p class="text-muted mb-0 small">Pay when you receive your order</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Payment Form (Stripe) -->
+                            <div v-if="selectedPayment === 'stripe'" class="mt-4 p-3 border rounded">
+                                <div id="card-element">
+                                    <!-- Stripe Card Element will be inserted here -->
+                                </div>
+                                <div id="card-errors" role="alert" class="text-danger mt-2"></div>
+                            </div>
+                            
+                            <!-- PayPal Button Container -->
+                            <div v-if="selectedPayment === 'paypal'" class="mt-4">
+                                <div id="paypal-button-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Order Summary -->
+                <div class="col-lg-4 mt-4 mt-lg-0">
+                    <div class="order-summary">
+                        <h4 class="mb-4">Order Summary</h4>
+                        <div v-if="cartItems.length === 0" class="text-center py-4">
+                            <p>Your cart is empty</p>
+                            <a href="index.html" class="btn btn-primary-custom">Continue Shopping</a>
+                        </div>
+                        <div v-else>
+                            <div class="d-flex justify-content-between mb-2" v-for="item in cartItems" :key="item.id">
+                                <div>
+                                    <span>{{ item.name }}</span>
+                                    <small class="text-muted d-block">Qty: {{ item.quantity }}</small>
+                                </div>
+                                <span>₹{{ (item.price * item.quantity).toFixed(2) }}</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal</span>
+                                <span>₹{{ subtotal.toFixed(2) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Shipping</span>
+                                <span>₹{{ shipping.toFixed(2) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tax (18% GST)</span>
+                                <span>₹{{ tax.toFixed(2) }}</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between mb-4">
+                                <strong>Total</strong>
+                                <strong>₹{{ total.toFixed(2) }}</strong>
+                            </div>
+                            <a href="order-success.html" class="btn btn-primary-custom w-100" @click="placeOrder" :disabled="!isFormValid || processing">
+                                <span v-if="processing">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    Processing...
+                                </span>
+                                <span v-else>Place Order</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-4 mb-4 mb-md-0">
+                        <h5>Esakki's Plant Medicine</h5>
+                        <p>Providing authentic plant-based remedies since 2008.</p>
+                        <div class="mt-3">
+                            <img src="https://via.placeholder.com/120x60?text=Payment+Methods" alt="Payment Methods" class="img-fluid">
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-4 mb-md-0">
+                        <h5>Shop</h5>
+                        <ul class="list-unstyled">
+                            <li><a href="index.html#products" class="text-white">All Products</a></li>
+                            <li><a href="#" class="text-white">New Arrivals</a></li>
+                            <li><a href="#" class="text-white">Best Sellers</a></li>
+                            <li><a href="#" class="text-white">Special Offers</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-2 mb-4 mb-md-0">
+                        <h5>Information</h5>
+                        <ul class="list-unstyled">
+                            <li><a href="#" class="text-white">About Us</a></li>
+                            <li><a href="#" class="text-white">Blog</a></li>
+                            <li><a href="#" class="text-white">Contact</a></li>
+                            <li><a href="#" class="text-white">FAQs</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Connect With Us</h5>
+                        <div class="social-icons mb-3">
+                            <a href="https://www.instagram.com/pillai_magan_x/" class="text-white me-3"><i class="fab fa-instagram"></i></a>
+                            <a href="https://www.facebook.com/m.esakki.2025/" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
+                            <a href="https://x.com/EsakkiM17041" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                            <a href="https://github.com/Esakki-M" class="text-white"><i class="fab fa-github"></i></a>
+                        </div>
+                        <div class="mb-3">
+                            <p><i class="fas fa-phone me-2"></i> +91 9342587007</p>
+                            <p><i class="fas fa-envelope me-2"></i> mresakkiofficial@gmail.com</p>
+                            <p><i class="fas fa-map-marker-alt me-2"></i> 26,Vinayagar streed, Alwarkurichi, Tenkasi</p>
+                        </div>
+                    </div>
+                </div>
+                <hr class="mt-4 bg-light">
+                <div class="text-center">
+                    <p class="mb-0">&copy; 2025 Esakki's Plant Medicine. All rights reserved.</p>
+                    <p class="mb-0">Designed by <a href="#" class="text-white">Team Spark-X</a></p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Checkout JS -->
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+        
+        createApp({
+            setup() {
+                // State
+                const cartItems = ref([]);
+                const selectedPayment = ref('razorpay');
+                const processing = ref(false);
+                const shippingInfo = ref({
+                    firstName: '',
+                    lastName: '',
+                    email: '',
+                    phone: '',
+                    address: '',
+                    city: '',
+                    state: '',
+                    pincode: ''
+                });
+                
+                // Computed properties
+                const subtotal = computed(() => {
+                    return cartItems.value.reduce((total, item) => total + (item.price * item.quantity), 0);
+                });
+                
+                const shipping = computed(() => {
+                    return subtotal.value > 1000 ? 0 : 100;
+                });
+                
+                const tax = computed(() => {
+                    return subtotal.value * 0.18;
+                });
+                
+                const total = computed(() => {
+                    return subtotal.value + shipping.value + tax.value;
+                });
+                
+                const isFormValid = computed(() => {
+                    const { firstName, lastName, email, phone, address, city, state, pincode } = shippingInfo.value;
+                    return firstName && lastName && email && phone && address && city && state && pincode;
+                });
+                
+                // Methods
+                const loadCartFromLocalStorage = () => {
+                    try {
+                        const savedCart = localStorage.getItem('plantMedicineCart');
+                        if (savedCart) {
+                            cartItems.value = JSON.parse(savedCart);
+                        }
+                    } catch (error) {
+                        console.error('Error loading cart from local storage:', error);
+                    }
+                };
+                
+                const selectPayment = (method) => {
+                    selectedPayment.value = method;
+                    
+                    if (method === 'paypal') {
+                        renderPayPalButton();
+                    } else if (method === 'stripe') {
+                        renderStripeElements();
+                    }
+                };
+                
+                const renderPayPalButton = () => {
+                    // Clear existing buttons
+                    document.getElementById('paypal-button-container').innerHTML = '';
+                    
+                    // Render PayPal buttons
+                    paypal.Buttons({
+                        createOrder: function(data, actions) {
+                            return actions.order.create({
+                                purchase_units: [{
+                                    amount: {
+                                        currency_code: 'INR',
+                                        value: total.value.toFixed(2)
+                                    }
+                                }]
+                            });
+                        },
+                        onApprove: function(data, actions) {
+                            return actions.order.capture().then(function(details) {
+                                handleSuccessfulPayment('paypal', details.id);
+                            });
+                        }
+                    }).render('#paypal-button-container');
+                };
+                
+                const renderStripeElements = () => {
+                    // Initialize Stripe (replace with your publishable key)
+                    const stripe = Stripe('pk_test_sample');
+                    const elements = stripe.elements();
+                    
+                    // Create card element
+                    const cardElement = elements.create('card');
+                    cardElement.mount('#card-element');
+                    
+                    // Handle validation errors
+                    cardElement.on('change', function(event) {
+                        const displayError = document.getElementById('card-errors');
+                        if (event.error) {
+                            displayError.textContent = event.error.message;
+                        } else {
+                            displayError.textContent = '';
+                        }
+                    });
+                };
+                
+                const placeOrder = () => {
+                    if (!isFormValid.value) {
+                        alert('Please fill in all required fields');
+                        return;
+                    }
+                    
+                    processing.value = true;
+                    
+                    switch (selectedPayment.value) {
+                        case 'razorpay':
+                            processRazorpayPayment();
+                            break;
+                        case 'stripe':
+                            processStripePayment();
+                            break;
+                        case 'cod':
+                            processCashOnDelivery();
+                            break;
+                        // PayPal is handled by its own button
+                    }
+                };
+                
+                const processRazorpayPayment = () => {
+                    const options = {
+                        key: 'rzp_test_sample', // Replace with your Razorpay key
+                        amount: total.value * 100, // Amount in paise
+                        currency: 'INR',
+                        name: 'Esakki\'s Plant Medicine',
+                        description: 'Purchase of herbal products',
+                        image: 'https://via.placeholder.com/150',
+                        handler: function(response) {
+                            handleSuccessfulPayment('razorpay', response.razorpay_payment_id);
+                        },
+                        prefill: {
+                            name: `${shippingInfo.value.firstName} ${shippingInfo.value.lastName}`,
+                            email: shippingInfo.value.email,
+                            contact: shippingInfo.value.phone
+                        },
+                        theme: {
+                            color: '#1cca64'
+                        }
+                    };
+                    
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                    processing.value = false;
+                };
+                
+                const processStripePayment = () => {
+                    // In a real implementation, you would send the card details to your server
+                    // and create a payment intent with Stripe
+                    setTimeout(() => {
+                        handleSuccessfulPayment('stripe', 'stripe_' + Date.now());
+                    }, 2000);
+                };
+                
+                const processCashOnDelivery = () => {
+                    // Simulate processing
+                    setTimeout(() => {
+                        handleSuccessfulPayment('cod', 'cod_' + Date.now());
+                    }, 1500);
+                };
+                
+                const handleSuccessfulPayment = (method, transactionId) => {
+                    processing.value = false;
+                    
+                    // In a real app, you would send the order to your backend
+                    const order = {
+                        items: cartItems.value,
+                        shipping: shippingInfo.value,
+                        payment: {
+                            method: method,
+                            transactionId: transactionId,
+                            amount: total.value
+                        },
+                        date: new Date().toISOString()
+                    };
+                    
+                    console.log('Order placed:', order);
+                    
+                    // Clear cart
+                    localStorage.removeItem('plantMedicineCart');
+                    
+                    // Redirect to success page
+                    window.location.href = 'order-success.html?orderId=' + transactionId;
+                };
+                
+                // Lifecycle hooks
+                onMounted(() => {
+                    loadCartFromLocalStorage();
+                });
+                
+                return {
+                    cartItems,
+                    selectedPayment,
+                    processing,
+                    shippingInfo,
+                    subtotal,
+                    shipping,
+                    tax,
+                    total,
+                    isFormValid,
+                    selectPayment,
+                    placeOrder
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

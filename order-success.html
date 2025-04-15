@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Successful | Esakki's Plant Medicine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #1cca64;
+            --primary-dark: #0f803d;
+            --secondary: #8f94fb;
+            --dark: #111714;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--dark);
+            background-color: var(--light);
+        }
+        
+        .navbar-brand {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--primary-dark);
+        }
+        
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary-custom {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-custom:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        
+        .success-icon {
+            font-size: 5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .order-success-card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 3rem;
+            text-align: center;
+        }
+        
+        .footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 50px 0;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+            <div class="container">
+                <a class="navbar-brand" href="index.html">Esakki's Plant Medicine</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html#products">Products</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">About</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Contact</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" @click.prevent="toggleCartModal">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span v-if="cartTotalItems > 0" class="badge bg-primary rounded-pill">{{ cartTotalItems }}</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Order Success Section -->
+        <section class="py-5">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="order-success-card">
+                            <i class="fas fa-check-circle success-icon"></i>
+                            <h1 class="mb-4">Order Successful!</h1>
+                            <p class="lead mb-4">Thank you for your purchase. Your order has been received and is being processed.</p>
+                            
+                            <div class="order-details mb-4 p-4 bg-light rounded">
+                                <h4 class="mb-3">Order Details</h4>
+                                <p><strong>Order ID:</strong> <span id="orderId"></span></p>
+                                <p><strong>Order Date:</strong> <span id="orderDate"></span></p>
+                                <p><strong>Order Status:</strong> <span id="orderStatus"></span></p>
+                            </div>
+                            
+                            <div class="customer-details mb-4 p-4 bg-light rounded">
+                                <h4 class="mb-3">Customer Details</h4>
+                                <p><strong>Name:</strong> <span id="customerName"></span></p>
+                                <p><strong>Email:</strong> <span id="customerEmail"></span></p>
+                                <p><strong>Phone:</strong> <span id="customerPhone"></span></p>
+                                <p><strong>Shipping Address:</strong> <span id="shippingAddress"></span></p>
+                            </div>
+                            
+                            <div class="payment-details mb-4 p-4 bg-light rounded">
+                                <h4 class="mb-3">Payment Details</h4>
+                                <p><strong>Payment Method:</strong> <span id="paymentMethod"></span></p>
+                                <p><strong>Transaction ID:</strong> <span id="transactionId"></span></p>
+                            </div>
+                            
+                            <div class="order-items mb-4 p-4 bg-light rounded">
+                                <h4 class="mb-3">Order Items</h4>
+                                <div id="orderItems"></div>
+                                <div class="d-flex justify-content-between mt-3 pt-3 border-top">
+                                    <span>Subtotal:</span>
+                                    <span id="subtotal"></span>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <span>Tax (GST):</span>
+                                    <span id="tax"></span>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <span>Shipping:</span>
+                                    <span id="shipping"></span>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2 pt-2 border-top fw-bold">
+                                    <span>Total:</span>
+                                    <span id="totalAmount"></span>
+                                </div>
+                            </div>
+                            
+                            <p class="mb-4">A confirmation email has been sent to your email address with the order details.</p>
+                            
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="index.html" class="btn btn-primary-custom">Continue Shopping</a>
+                                <a href="checkout.html" class="btn btn-outline-secondary">Track Order</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Recommended Products Section -->
+        <section class="py-5 bg-light">
+            <div class="container">
+                <h2 class="text-center mb-5">You May Also Like</h2>
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="card product-card h-100">
+                            <img src="medicine1.jpg" class="card-img-top product-img" alt="Product Image">
+                            <div class="card-body">
+                                <h5 class="card-title">Herbal Immunity Booster</h5>
+                                <p class="card-text">Natural formula to strengthen your immune system.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="price">₹499</span>
+                                    <button class="btn btn-sm btn-primary-custom" @click="addToCart({id: 1, name: 'Herbal Immunity Booster', price: 499, image: 'medicine1.jpg', quantity: 1})">Add to Cart</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card product-card h-100">
+                            <img src="medicine2.jpg" class="card-img-top product-img" alt="Product Image">
+                            <div class="card-body">
+                                <h5 class="card-title">Ayurvedic Digestive Tonic</h5>
+                                <p class="card-text">Traditional remedy for digestive health and comfort.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="price">₹399</span>
+                                    <button class="btn btn-sm btn-primary-custom" @click="addToCart({id: 2, name: 'Ayurvedic Digestive Tonic', price: 399, image: 'medicine2.jpg', quantity: 1})">Add to Cart</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card product-card h-100">
+                            <img src="medicine3.jpg" class="card-img-top product-img" alt="Product Image">
+                            <div class="card-body">
+                                <h5 class="card-title">Herbal Sleep Aid</h5>
+                                <p class="card-text">Natural formula to improve sleep quality and relaxation.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="price">₹599</span>
+                                    <button class="btn btn-sm btn-primary-custom" @click="addToCart({id: 3, name: 'Herbal Sleep Aid', price: 599, image: 'medicine3.jpg', quantity: 1})">Add to Cart</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-4 mb-4 mb-lg-0">
+                        <h5 class="text-uppercase mb-4">Esakki's Plant Medicine</h5>
+                        <p>Providing natural healing solutions through the power of plants and traditional knowledge.</p>
+                        <div class="social-icons mt-4">
+                            <a href="#" class="me-3"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="me-3"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="me-3"><i class="fab fa-instagram"></i></a>
+                            <a href="#"><i class="fab fa-youtube"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                        <h6 class="text-uppercase mb-4">Shop</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><a href="index.html#products" class="text-white">All Products</a></li>
+                            <li class="mb-2"><a href="#" class="text-white">New Arrivals</a></li>
+                            <li class="mb-2"><a href="#" class="text-white">Best Sellers</a></li>
+                            <li class="mb-2"><a href="#" class="text-white">Offers</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                        <h6 class="text-uppercase mb-4">Support</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><a href="#" class="text-white">Contact Us</a></li>
+                            <li class="mb-2"><a href="#" class="text-white">FAQs</a></li>
+                            <li class="mb-2"><a href="#" class="text-white">Shipping</a></li>
+                            <li class="mb-2"><a href="#" class="text-white">Returns</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <h6 class="text-uppercase mb-4">Newsletter</h6>
+                        <p class="mb-3">Subscribe to receive updates, access to exclusive deals, and more.</p>
+                        <div class="input-group mb-3">
+                            <input type="email" class="form-control" placeholder="Your Email" v-model="newsletterEmail">
+                            <button class="btn btn-primary-custom" type="button" @click="subscribeNewsletter">Subscribe</button>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-4 bg-light">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-center text-md-start">
+                        <p class="mb-0">&copy; 2023 Esakki's Plant Medicine. All rights reserved.</p>
+                    </div>
+                    <div class="col-md-6 text-center text-md-end">
+                        <a href="#" class="text-white me-3">Privacy Policy</a>
+                        <a href="#" class="text-white me-3">Terms of Service</a>
+                        <a href="#" class="text-white">Sitemap</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Vue.js Application -->
+    <script>
+        const { createApp, ref, onMounted, computed } = Vue;
+        
+        createApp({
+            setup() {
+                // State variables
+                const cartItems = ref([]);
+                const orderId = ref('');
+                const paymentMethod = ref('Credit Card');
+                const customerEmail = ref('customer@example.com');
+                const newsletterEmail = ref('');
+                
+                // Get order ID from URL parameters
+                const getOrderIdFromUrl = () => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const id = urlParams.get('orderId');
+                    if (id) {
+                        orderId.value = id;
+                    } else {
+                        orderId.value = 'ORD-' + Math.floor(Math.random() * 1000000);
+                    }
+                };
+                
+                // Load cart from localStorage
+                const loadCartFromLocalStorage = () => {
+                    const savedCart = localStorage.getItem('plantMedicineCart');
+                    if (savedCart) {
+                        cartItems.value = JSON.parse(savedCart);
+                    }
+                };
+                
+                // Computed properties
+                const cartTotalItems = computed(() => {
+                    return cartItems.value.reduce((total, item) => total + item.quantity, 0);
+                });
+                
+                // Methods
+                const toggleCartModal = () => {
+                    // In a real implementation, this would show a cart modal
+                    window.location.href = 'index.html#cart';
+                };
+                
+                const addToCart = (product) => {
+                    const existingItem = cartItems.value.find(item => item.id === product.id);
+                    
+                    if (existingItem) {
+                        existingItem.quantity++;
+                    } else {
+                        cartItems.value.push({...product});
+                    }
+                    
+                    // Save to localStorage
+                    localStorage.setItem('plantMedicineCart', JSON.stringify(cartItems.value));
+                    
+                    // Show toast notification
+                    alert('Product added to cart!');
+                };
+                
+                const subscribeNewsletter = () => {
+                    if (newsletterEmail.value && newsletterEmail.value.includes('@')) {
+                        alert('Thank you for subscribing to our newsletter!');
+                        newsletterEmail.value = '';
+                    } else {
+                        alert('Please enter a valid email address');
+                    }
+                };
+                
+                // Lifecycle hooks
+                onMounted(() => {
+                    loadCartFromLocalStorage();
+                    getOrderIdFromUrl();
+                });
+                
+                return {
+                    cartItems,
+                    orderId,
+                    paymentMethod,
+                    customerEmail,
+                    newsletterEmail,
+                    cartTotalItems,
+                    toggleCartModal,
+                    addToCart,
+                    subscribeNewsletter
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
